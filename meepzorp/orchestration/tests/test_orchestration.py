@@ -7,13 +7,17 @@ import pytest
 import pytest_asyncio
 import asyncio
 from typing import Dict, Any
-import uuid
-import json
-from datetime import datetime
+import httpx
 
-from meepzorp.orchestration.registry import AgentRegistryTool, AgentDiscoveryTool
+from meepzorp.orchestration.registry import AgentRegistryTool, AgentDiscoveryTool, AGENT_DB
 from meepzorp.orchestration.router import RouteRequestTool
-from meepzorp.orchestration.workflows import ExecuteWorkflowTool, CreateWorkflowTool, ListWorkflowsTool
+from meepzorp.orchestration.workflows import (
+    ExecuteWorkflowTool,
+    CreateWorkflowTool,
+    ListWorkflowsTool,
+    WORKFLOW_DB,
+)
+from meepzorp.orchestration.tests import mock_agent
 
 @pytest_asyncio.fixture
 async def mock_agent_info():
@@ -28,6 +32,31 @@ async def mock_agent_info():
             "environment": "test"
         }
     }
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_stores():
+    AGENT_DB.clear()
+    WORKFLOW_DB.clear()
+    yield
+    AGENT_DB.clear()
+    WORKFLOW_DB.clear()
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def mock_agent_server(monkeypatch):
+    """Patch httpx.AsyncClient to route to the mock agent app."""
+    transport = httpx.ASGITransport(app=mock_agent.app)
+
+    original_client = httpx.AsyncClient
+
+    def client_factory(*args, **kwargs):
+        kwargs.setdefault("transport", transport)
+        return original_client(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", client_factory)
+    yield
+    monkeypatch.setattr(httpx, "AsyncClient", original_client)
 
 @pytest_asyncio.fixture
 async def registered_agent(mock_agent_info):
