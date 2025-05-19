@@ -9,7 +9,11 @@ import logging
 import pytest
 
 from creative_director.agent import CreativeDirectorAgent
-from creative_director.capabilities.story_crafter import StoryElement
+from creative_director.capabilities.story_crafter import (
+    StoryElement,
+    NarrativeStructure,
+    StoryShape,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -80,23 +84,35 @@ def test_creative_director_content_writer_collaboration():
     # Analyze the narrative structure
     analysis = creative_director.analyze_narrative_structure(story.id)
     
-    # Verify the analysis
+    # Verify the analysis keys exist
     assert analysis is not None
     assert "structure_type" in analysis
     assert "story_shape" in analysis
     assert "emotional_arc" in analysis
     assert "overall_pace" in analysis
     assert "tension_points" in analysis
-    
-    # Print the analysis results
-    print("\nNarrative Analysis Results:")
-    print(f"Structure Type: {analysis['structure_type']}")
-    print(f"Story Shape: {analysis['story_shape']}")
-    print(f"Emotional Arc: {analysis['emotional_arc']}")
-    print(f"Overall Pace: {analysis['overall_pace']}")
-    print("\nTension Points:")
-    for point in analysis['tension_points']:
-        print(f"- {point}")
+
+    # Assert on key field values
+    assert analysis["structure_type"] in {
+        NarrativeStructure.HERO_JOURNEY.value,
+        NarrativeStructure.THREE_ACT.value,
+        NarrativeStructure.FIVE_ACT.value,
+        NarrativeStructure.SEVEN_POINT.value,
+        NarrativeStructure.SAVE_THE_CAT.value,
+    }
+    assert analysis["story_shape"] in {
+        StoryShape.MAN_IN_HOLE.value,
+        StoryShape.BOY_MEETS_GIRL.value,
+        StoryShape.FROM_BAD_TO_WORSE.value,
+        StoryShape.CINDERELLA.value,
+        StoryShape.ICARUS.value,
+        StoryShape.OEDIPUS.value,
+        StoryShape.FAUST.value,
+        StoryShape.RAGS_TO_RICHES.value,
+    }
+    assert isinstance(analysis["emotional_arc"], list)
+    assert isinstance(analysis["overall_pace"], str)
+    assert isinstance(analysis["tension_points"], list)
 
 if __name__ == "__main__":
-    test_creative_director_content_writer_collaboration() 
+    test_creative_director_content_writer_collaboration()
