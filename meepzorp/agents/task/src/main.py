@@ -149,8 +149,7 @@ async def startup_event():
 async def create_task(task: TaskCreate, user_id: str = Query(..., description="ID of the user creating the task")):
     """Create a new task"""
     try:
-        task_data = task.model_dump()
-        result = db.create_task(task_data, user_id)
+        result = db.create_task(task, user_id)
         return Task(**result)
     except Exception as e:
         logger.error(f"Error creating task: {str(e)}")
@@ -176,8 +175,7 @@ async def update_task(
 ):
     """Update an existing task"""
     try:
-        task_data = task_update.model_dump(exclude_unset=True)
-        result = db.update_task(task_id, task_data, user_id)
+        result = db.update_task(task_id, task_update, user_id)
         return Task(**result)
     except Exception as e:
         logger.error(f"Error updating task: {str(e)}")
