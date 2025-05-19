@@ -74,7 +74,13 @@ class TaskDB:
             raise
     
     def update_task(self, task_id: UUID, task: TaskUpdate, user_id: str) -> Optional[Task]:
-        """Update an existing task"""
+        """Update an existing task.
+
+        Args:
+            task_id: ID of the task to update.
+            task: :class:`TaskUpdate` instance with fields to change.
+            user_id: ID of the user performing the update.
+        """
         try:
             update_data = task.dict(exclude_unset=True)
             if update_data:

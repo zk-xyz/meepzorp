@@ -176,8 +176,7 @@ async def update_task(
 ):
     """Update an existing task"""
     try:
-        task_data = task_update.model_dump(exclude_unset=True)
-        result = db.update_task(task_id, task_data, user_id)
+        result = db.update_task(task_id, task_update, user_id)
         return Task(**result)
     except Exception as e:
         logger.error(f"Error updating task: {str(e)}")
