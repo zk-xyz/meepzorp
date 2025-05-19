@@ -157,10 +157,10 @@ A comprehensive Supabase database schema for storing system data.
 
 Documentation is available in the source code. Key files to explore:
 
-- `orchestration/src/registry.py`: Agent registration and discovery
-- `orchestration/src/router.py`: Request routing and agent communication
-- `orchestration/src/workflows.py`: Workflow definition and execution
-- `orchestration/src/main.py`: Core orchestration functionality
+- `orchestration/registry.py`: Agent registration and discovery
+- `orchestration/router.py`: Request routing and agent communication
+- `orchestration/workflows.py`: Workflow definition and execution
+- `orchestration/main.py`: Core orchestration functionality
 - `agents/base/src/*.py`: Base agent framework
 - `agents/personal/src/capabilities/*.py`: Personal agent capabilities
 - `supabase/migrations/*.sql`: Database schema
