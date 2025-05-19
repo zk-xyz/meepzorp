@@ -61,7 +61,7 @@ Connects to data storage for agent consumption.
 
 ```bash
 # Clone
-git clone https://github.com/zk-xyz/meepzorp_test.git
+git clone https://github.com/zk-xyz/meepzorp.git
 cd meepzorp
 
 # Create your env file *in the repo root*
