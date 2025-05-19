@@ -93,10 +93,13 @@ class KnowledgeDB:
             if embedding:
                 # If we have an embedding, use vector similarity search
                 filters.append(f"embedding <-> '{embedding}'::vector < 0.3")
-                params["order"] = "embedding <-> '{embedding}'::vector"
+                # Order by vector distance using the provided embedding
+                params["order"] = f"embedding <-> '{embedding}'::vector"
             
             if filters:
-                params["and"] = "(".join(filters) + ")" * len(filters)
+                # Combine filters using the PostgREST "and" operator
+                # Example result: "(filter1,filter2)"
+                params["and"] = "(" + ",".join(filters) + ")"
             
             # Make the request
             response = requests.get(
