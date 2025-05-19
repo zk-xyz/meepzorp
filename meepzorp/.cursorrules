@@ -1,0 +1,160 @@
+# Meepzorp Cursor Rules
+
+## Project Map (quick reference for AI agents)
+```
+mcp-implementation/                  # workspace root
+└── meepzorp/                        # primary project folder
+    ├── docker-compose.yml           # spins up all services
+    ├── requirements.txt             # shared Python deps
+    ├── orchestration/               # MCP gateway (FastAPI)
+    │   ├── main.py                  # /health, /mcp/tools, /mcp/workflows
+    │   ├── registry.py              # AgentRegistryTool / AgentDiscoveryTool
+    │   ├── router.py                # RouteRequestTool
+    │   ├── workflows.py             # ExecuteWorkflowTool
+    │   ├── Dockerfile               # container build
+    │   └── start.sh                 # container entrypoint
+    ├── agents/                      # specialized agents
+    │   ├── common/                  # shared auth/registration utilities
+    │   ├── base/                    # template agent
+    │   ├── personal/                # personal knowledge agent
+    │   ├── task/                    # task management agent
+    │   ├── creative_director/       # creative AI agent
+    │   └── document_processor/      # PDF & doc analysis agent
+    ├── docs/
+    │   └── setup/                   # port-configuration.md, agent-setup.md
+    ├── ui/                          # Next.js dashboard (Dockerised)
+    └── supabase/
+        └── migrations/              # schema *.sql files
+```
+*Secrets live only in `.env` (root) – never commit real keys.*
+
+## Directory Structure Standards
+- Root directory is always /Users/jasonlankow/Desktop/mcp-implementation
+- Primary project directory is mcp-implementation/meepzorp
+- Each agent is a self-contained module under meepzorp/agents/
+- Tests live with their respective modules (no scattered test directories)
+- No duplicate nested directories (e.g., creative_director/creative_director)
+- Standard directory structure:
+  ```
+  mcp-implementation/
+  ├── .env
+  ├── README.md
+  ├── requirements.txt
+  └── meepzorp/
+      ├── requirements.txt
+      ├── docker-compose.yml
+      ├── README.md
+      ├── agents/
+      │   ├── __init__.py
+      │   ├── base/
+      │   ├── common/
+      │   ├── creative_director/
+      │   │   ├── __init__.py
+      │   │   ├── agent.py
+      │   │   ├── capabilities/
+      │   │   └── tests/
+      │   └── document_processor/
+      ├── orchestration/
+      ├── ui/
+      └── supabase/
+  ```
+
+## Environment & Configuration
+- Always check for existing .env files before creating new ones
+- Never commit sensitive credentials or API keys
+- Use environment variable templates in documentation
+- Keep configuration consistent across all services
+
+## Code Structure & Organization
+- Maintain modular architecture for agent components
+- Follow FastAPI factory pattern for all new agents
+- Keep agent-specific code in dedicated directories
+- Use consistent port numbering scheme (8000-8999 for services)
+
+## Documentation
+- Document all new endpoints in README.md
+- Update PRD when adding major features
+- Include example usage in agent documentation
+- Maintain up-to-date API documentation
+
+## Database & Storage
+- Use Supabase for all persistent storage
+- Implement pgvector for semantic search features
+- Follow established schema patterns
+- Document all database migrations
+
+## Testing & Quality
+- Include pytest fixtures for new components
+- Maintain test coverage for critical paths
+- Use FastAPI TestClient for endpoint testing
+- Implement health checks for all services
+
+## Security
+- Implement API key authentication for all endpoints
+- Use proper CORS configuration
+- Never log sensitive information
+- Follow security best practices for agent communication
+
+## Docker & Deployment
+- Use consistent container naming
+- Maintain service dependencies in docker-compose
+- Follow resource allocation guidelines
+- Implement proper health checks
+
+## Agent Communication
+- Follow MCP protocol standards
+- Implement proper error handling
+- Use standardized response formats
+- Maintain agent capability documentation
+
+## Knowledge Management
+- Follow RAG best practices
+- Implement proper vector storage
+- Maintain knowledge graph consistency
+- Document knowledge base schema changes
+
+## Secret-Scanning
+- Deny commit if a file contains patterns that look like keys or secrets:
+  - `sk_live_[0-9a-zA-Z]{16,}`
+  - `eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}`  # JWT
+  - `-----BEGIN PRIVATE KEY-----`
+  - `SUPABASE_KEY=.*`
+  - `OPENAI_API_KEY=.*`
+
+## Disallowed Committed Paths
+- Reject commits that include:
+  - `**/__pycache__/**`
+  - `**/*.pyc`
+  - `ui/.next/**`
+  - `ui/node_modules/**`
+  - `*/coverage/**`
+
+## Git Workflow
+- Default branch is `main`.
+- Feature branches: `feat/<ticket>-<desc>`
+- Hotfix branches:  `fix/<issue>-<desc>`
+- Commit messages must start with Conventional-Commit prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`).
+
+## Database Migrations
+- New migration filenames must match `supabase/migrations/YYYYMMDDhhmmss_<description>.sql`.
+- Each migration must contain `-- +migrate Up` and `-- +migrate Down` sections.
+
+## Testing
+- CI must run `pytest` with zero failures.
+- Coverage must stay ≥ 80 % for `agents` and `orchestration` packages.
+
+## Docker
+- All service Dockerfiles must `FROM python:3.11-slim`.
+- Every service in `docker-compose.yml` must define a `healthcheck`.
+
+## Agent Capability Contracts
+- Any new file matching `agents/*/src/main.py` must:
+  - Import `register_agent` from `agents.common.registration`.
+  - Register at least one capability during the startup event.
+
+## Directory Vigilance
+- **Always confirm working directory** when starting a new terminal session in Cursor:
+  1. New shells open at workspace root (`/mcp-implementation`).
+  2. If you intend to operate on project code, run `cd meepzorp` first.
+- Periodically run `tree -L 2` or similar to review for accidental duplicate folders (e.g., `meepzorp/meepzorp`).
+- Reject PRs or commits that create unexpected top-level duplicates or nested duplicates of existing modules. 

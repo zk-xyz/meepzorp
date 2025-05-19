@@ -1,0 +1,238 @@
+services:
+  # Orchestration service - Main API gateway and tool registry
+  orchestration:
+    build:
+      context: ./orchestration
+      dockerfile: Dockerfile
+    container_name: meepzorp-orchestration
+    restart: unless-stopped
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - LOG_LEVEL=INFO
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=${ORCHESTRATION_PORT:-9810}
+    # Main API gateway port - handles agent registration and tool routing
+    ports:
+      - "${ORCHESTRATION_PORT:-9810}:${ORCHESTRATION_PORT:-9810}"
+    volumes:
+      - ./orchestration:/app
+      - orchestration_data:/data
+    networks:
+      - mcp-net
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${ORCHESTRATION_PORT:-9810}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Base agent template (used for development/testing)
+  base-agent:
+    build:
+      context: .
+      dockerfile: ./agents/base/Dockerfile
+    container_name: meepzorp-base-agent
+    restart: unless-stopped
+    environment:
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - MCP_PORT=${BASE_AGENT_PORT:-8001}
+      - LOG_LEVEL=INFO
+    # Base agent port - template for new agent development
+    ports:
+      - "${BASE_AGENT_PORT:-8001}:${BASE_AGENT_PORT:-8001}"
+    volumes:
+      - ./agents/base:/app
+      - ./agents/common:/app/agents/common
+      - base_agent_data:/data
+    networks:
+      - mcp-net
+    depends_on:
+      - orchestration
+
+  # Personal knowledge agent - Manages personal knowledge base and queries
+  personal-agent:
+    build:
+      context: .
+      dockerfile: ./agents/personal/Dockerfile
+    container_name: meepzorp-personal-agent
+    restart: unless-stopped
+    environment:
+      - AGENT_PORT=${PERSONAL_AGENT_PORT:-8002}
+      - AGENT_HOST=0.0.0.0
+      - AGENT_EXTERNAL_HOST=personal-agent:${PERSONAL_AGENT_PORT:-8002}
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - LOG_LEVEL=INFO
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    # Personal agent port - handles knowledge base operations
+    ports:
+      - "${PERSONAL_AGENT_PORT:-8002}:${PERSONAL_AGENT_PORT:-8002}"
+    volumes:
+      - ./agents/personal/src:/app/src
+      - ./agents/common:/app/agents/common
+      - personal_agent_data:/data
+    networks:
+      - mcp-net
+    depends_on:
+      orchestration:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PERSONAL_AGENT_PORT:-8002}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # File system monitoring service - Watches for code changes
+  inotifywait:
+    build:
+      context: ./inotify
+      dockerfile: Dockerfile
+    container_name: meepzorp-inotifywait
+    restart: unless-stopped
+    volumes:
+      - ./:/watched
+    command: -m -r -e modify,create,delete,move /watched
+    networks:
+      - mcp-net
+
+  # Redis for caching and pub/sub - Message broker and cache
+  redis:
+    image: redis:alpine
+    container_name: meepzorp-redis
+    restart: unless-stopped
+    # Redis port - used for caching and pub/sub messaging
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp-net
+
+  # UI Management interface - Web dashboard
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: meepzorp-ui
+    restart: unless-stopped
+    environment:
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - NODE_ENV=production
+      - PORT=${UI_PORT:-3000}
+    # UI port - serves the management dashboard
+    ports:
+      - "${UI_PORT:-3000}:${UI_PORT:-3000}"
+    volumes:
+      - ./ui:/app
+      - ui_node_modules:/app/node_modules
+    networks:
+      - mcp-net
+    depends_on:
+      - orchestration
+    command: sh -c "npm run build && npm start"
+
+  # Test agent - For testing and development
+  test-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: meepzorp-test-agent
+    # Test agent port - used for development and testing
+    ports:
+      - "${TEST_AGENT_PORT:-9811}:${TEST_AGENT_PORT:-9811}"
+    environment:
+      - AGENT_PORT=${TEST_AGENT_PORT:-9811}
+      - AGENT_HOST=0.0.0.0
+      - AGENT_EXTERNAL_HOST=test-agent
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - LOG_LEVEL=INFO
+    depends_on:
+      orchestration:
+        condition: service_healthy
+    networks:
+      - mcp-net
+
+  # Task management agent - Manages tasks and project management
+  task-agent:
+    build:
+      context: ./agents/task
+      dockerfile: Dockerfile
+    container_name: meepzorp-task-agent
+    restart: unless-stopped
+    environment:
+      - AGENT_PORT=${TASK_AGENT_PORT:-8003}
+      - AGENT_HOST=0.0.0.0
+      - AGENT_EXTERNAL_HOST=task-agent:${TASK_AGENT_PORT:-8003}
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - LOG_LEVEL=INFO
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    # Task agent port - handles task management operations
+    ports:
+      - "${TASK_AGENT_PORT:-8003}:${TASK_AGENT_PORT:-8003}"
+    volumes:
+      - ./agents/task/src:/app/src
+      - ./agents/common:/app/agents/common
+      - task_agent_data:/data
+    networks:
+      - mcp-net
+    depends_on:
+      orchestration:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${TASK_AGENT_PORT:-8003}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Document Processing Agent - Handles PDF and document analysis
+  document-processor:
+    build:
+      context: ./agents/document_processor
+      dockerfile: Dockerfile
+    container_name: meepzorp-document-processor
+    restart: unless-stopped
+    environment:
+      - AGENT_PORT=${DOCUMENT_PROCESSOR_PORT:-8004}
+      - AGENT_HOST=0.0.0.0
+      - AGENT_EXTERNAL_HOST=document-processor:${DOCUMENT_PROCESSOR_PORT:-8004}
+      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
+      - LOG_LEVEL=INFO
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "${DOCUMENT_PROCESSOR_PORT:-8004}:${DOCUMENT_PROCESSOR_PORT:-8004}"
+    volumes:
+      - ./agents/document_processor:/app
+      - ./agents/common:/app/agents/common
+      - document_processor_data:/data
+    networks:
+      - mcp-net
+    depends_on:
+      orchestration:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${DOCUMENT_PROCESSOR_PORT:-8004}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  mcp-net:
+    driver: bridge
+
+volumes:
+  orchestration_data:
+  base_agent_data:
+  personal_agent_data:
+  redis_data:
+  ui_node_modules:
+  task_agent_data:
+  document_processor_data:
