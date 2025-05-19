@@ -45,10 +45,10 @@ When setting up a new project or agent, follow these steps to ensure correct por
 3. **Agent Dockerfile Setup**
    - Create a startup script to handle environment variable substitution:
      ```dockerfile
-     RUN echo '#!/bin/sh\nuvicorn src.main:app --host 0.0.0.0 --port ${AGENT_PORT:-default}' > /app/start.sh && \
+     RUN echo '#!/bin/sh\nuvicorn src.main:app --host 0.0.0.0 --port ${AGENT_PORT:-8000}' > /app/start.sh && \
          chmod +x /app/start.sh
      
-     EXPOSE ${AGENT_PORT:-default}
+     EXPOSE ${AGENT_PORT:-8000}
      
      CMD ["/app/start.sh"]
      ```
