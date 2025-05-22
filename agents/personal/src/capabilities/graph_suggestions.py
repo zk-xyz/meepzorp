@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from pydantic import BaseModel, Field
 from ..db import KnowledgeDB
 import logging
+import requests
 import json
 import re
 from difflib import SequenceMatcher
@@ -236,7 +237,7 @@ class SuggestConnectionsCapability:
         """Infer the most likely relationship type between entities."""
         # This is a simplified version - in practice, you'd use more sophisticated logic
         source_type = source.get("type", "").lower()
-        target_type = source.get("type", "").lower()
+        target_type = target.get("type", "").lower()
         
         # Define some basic relationship type rules
         type_rules = {
