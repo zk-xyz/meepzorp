@@ -92,27 +92,27 @@ def test_creative_director_content_writer_collaboration():
     # Analyze the narrative structure
     analysis = creative_director.analyze_narrative_structure(story.id)
     
-    # Print the analysis results
-    print("\nNarrative Analysis Results:")
-    print(f"Structure Type: {analysis['structure_type']}")
-    print(f"Story Shape: {analysis['story_shape']}")
-    print(f"Emotional Arc:")
-    for point in analysis['emotional_arc']:
-        print(f"  - {point['element_type']} at {point['timestamp']}: {point['emotional_value']}")
-    print("\nStructure Analysis:")
-    for stage, details in analysis['structure_analysis'].items():
-        print(f"  - {stage}: {details}")
-    print("\nCharacter Development:")
-    for character in analysis['character_development']:
-        print(f"  - {character}")
-    print("\nThematic Elements:")
-    for theme in analysis['thematic_elements']:
-        print(f"  - {theme}")
-    print("\nPacing Analysis:")
-    print(f"  Overall Pace: {analysis['pacing_analysis']['overall_pace']}")
-    print("  Tension Points:")
-    for point in analysis['pacing_analysis']['tension_points']:
-        print(f"    - {point['description']} at {point['position']}%")
+    # Validate key fields in the analysis output
+    assert analysis is not None
+    assert analysis["structure_type"] in {
+        NarrativeStructure.HERO_JOURNEY.value,
+        NarrativeStructure.THREE_ACT.value,
+        NarrativeStructure.FIVE_ACT.value,
+        NarrativeStructure.SEVEN_POINT.value,
+        NarrativeStructure.SAVE_THE_CAT.value,
+    }
+    assert analysis["story_shape"] in {
+        StoryShape.MAN_IN_HOLE.value,
+        StoryShape.BOY_MEETS_GIRL.value,
+        StoryShape.FROM_BAD_TO_WORSE.value,
+        StoryShape.CINDERELLA.value,
+        StoryShape.ICARUS.value,
+        StoryShape.OEDIPUS.value,
+        StoryShape.FAUST.value,
+        StoryShape.RAGS_TO_RICHES.value,
+    }
+    assert isinstance(analysis["emotional_arc"], list)
+    assert len(analysis["emotional_arc"]) > 0
 
 def test_analyze_no_talent_kid():
     """Test narrative analysis of The No-Talent Kid by Kurt Vonnegut."""
@@ -249,27 +249,27 @@ def test_analyze_no_talent_kid():
     # Analyze the narrative structure
     analysis = creative_director.analyze_narrative_structure(story.id)
     
-    # Print the analysis results
-    print("\nNarrative Analysis of 'The No-Talent Kid':")
-    print(f"Structure Type: {analysis['structure_type']}")
-    print(f"Story Shape: {analysis['story_shape']}")
-    print("\nEmotional Arc:")
-    for point in analysis['emotional_arc']:
-        print(f"  - {point['element_type']}: {point['emotional_value']}")
-    print("\nStructure Analysis:")
-    for stage, details in analysis['structure_analysis'].items():
-        print(f"  - {stage}: {details}")
-    print("\nCharacter Development:")
-    for character in analysis['character_development']:
-        print(f"  - {character}")
-    print("\nThematic Elements:")
-    for theme in analysis['thematic_elements']:
-        print(f"  - {theme}")
-    print("\nPacing Analysis:")
-    print(f"  Overall Pace: {analysis['pacing_analysis']['overall_pace']}")
-    print("  Tension Points:")
-    for point in analysis['pacing_analysis']['tension_points']:
-        print(f"    - {point['description']} at {point['position']}%")
+    # Validate key fields in the analysis output
+    assert analysis is not None
+    assert analysis["structure_type"] in {
+        NarrativeStructure.HERO_JOURNEY.value,
+        NarrativeStructure.THREE_ACT.value,
+        NarrativeStructure.FIVE_ACT.value,
+        NarrativeStructure.SEVEN_POINT.value,
+        NarrativeStructure.SAVE_THE_CAT.value,
+    }
+    assert analysis["story_shape"] in {
+        StoryShape.MAN_IN_HOLE.value,
+        StoryShape.BOY_MEETS_GIRL.value,
+        StoryShape.FROM_BAD_TO_WORSE.value,
+        StoryShape.CINDERELLA.value,
+        StoryShape.ICARUS.value,
+        StoryShape.OEDIPUS.value,
+        StoryShape.FAUST.value,
+        StoryShape.RAGS_TO_RICHES.value,
+    }
+    assert isinstance(analysis["emotional_arc"], list)
+    assert len(analysis["emotional_arc"]) == len(elements)
 
 if __name__ == "__main__":
     test_creative_director_content_writer_collaboration()
