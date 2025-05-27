@@ -62,4 +62,4 @@ async def register_agent(name: str, description: str, capabilities: List[Dict[st
                 
     except Exception as e:
         logger.error(f"Error registering agent: {str(e)}")
-        raise 
+        raise

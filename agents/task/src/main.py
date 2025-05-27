@@ -54,94 +54,88 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     """Initialize the agent and register with orchestration service"""
-    try:
-        # Register with orchestration service
-        async with httpx.AsyncClient() as client:
-            registration_data = {
-                "name": "Task Management Agent",
-                "description": "Agent for managing tasks and project management",
-                "endpoint": f"http://{os.getenv('AGENT_HOST', '0.0.0.0')}:{os.getenv('AGENT_PORT', '8003')}",
-                "capabilities": [
-                    {
-                        "name": "create_task",
-                        "description": "Create a new task",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "title": {"type": "string"},
-                                "description": {"type": "string"},
-                                "status": {"type": "string"},
-                                "priority": {"type": "string"},
-                                "due_date": {"type": "string", "format": "date"},
-                                "assignee": {"type": "string"},
-                                "project_id": {"type": "string"},
-                                "tags": {"type": "array", "items": {"type": "string"}}
-                            },
-                            "required": ["title"]
-                        }
-                    },
-                    {
-                        "name": "get_task",
-                        "description": "Get a task by ID",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "task_id": {"type": "string"}
-                            },
-                            "required": ["task_id"]
-                        }
-                    },
-                    {
-                        "name": "update_task",
-                        "description": "Update an existing task",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "task_id": {"type": "string"},
-                                "title": {"type": "string"},
-                                "description": {"type": "string"},
-                                "status": {"type": "string"},
-                                "priority": {"type": "string"},
-                                "due_date": {"type": "string", "format": "date"},
-                                "assignee": {"type": "string"},
-                                "project_id": {"type": "string"},
-                                "tags": {"type": "array", "items": {"type": "string"}}
-                            },
-                            "required": ["task_id"]
-                        }
-                    },
-                    {
-                        "name": "delete_task",
-                        "description": "Delete a task",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "task_id": {"type": "string"}
-                            },
-                            "required": ["task_id"]
-                        }
-                    },
-                    {
-                        "name": "list_tasks",
-                        "description": "List all tasks with optional filters",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "status": {"type": "string"},
-                                "priority": {"type": "string"},
-                                "assignee": {"type": "string"},
-                                "project_id": {"type": "string"},
-                                "tags": {"type": "array", "items": {"type": "string"}}
-                            }
-                        }
-                    }
-                ]
+    capabilities = [
+        {
+            "name": "create_task",
+            "description": "Create a new task",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "status": {"type": "string"},
+                    "priority": {"type": "string"},
+                    "due_date": {"type": "string", "format": "date"},
+                    "assignee": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "tags": {"type": "array", "items": {"type": "string"}}
+                },
+                "required": ["title"]
             }
-            response = await client.post(
-                f"http://{os.getenv('ORCHESTRATION_HOST', 'orchestration')}:{os.getenv('ORCHESTRATION_PORT', '9810')}/mcp/tools",
-                json=registration_data
-            )
-            response.raise_for_status()
+        },
+        {
+            "name": "get_task",
+            "description": "Get a task by ID",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string"}
+                },
+                "required": ["task_id"]
+            }
+        },
+        {
+            "name": "update_task",
+            "description": "Update an existing task",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "status": {"type": "string"},
+                    "priority": {"type": "string"},
+                    "due_date": {"type": "string", "format": "date"},
+                    "assignee": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "tags": {"type": "array", "items": {"type": "string"}}
+                },
+                "required": ["task_id"]
+            }
+        },
+        {
+            "name": "delete_task",
+            "description": "Delete a task",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string"}
+                },
+                "required": ["task_id"]
+            }
+        },
+        {
+            "name": "list_tasks",
+            "description": "List all tasks with optional filters",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string"},
+                    "priority": {"type": "string"},
+                    "assignee": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "tags": {"type": "array", "items": {"type": "string"}}
+                }
+            }
+        }
+    ]
+
+    try:
+        await register_agent(
+            name="Task Management Agent",
+            description="Agent for managing tasks and project management",
+            capabilities=capabilities
+        )
     except Exception as e:
         print(f"Error during startup: {str(e)}")
 
