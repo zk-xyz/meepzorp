@@ -4,7 +4,7 @@ Database client module for knowledge storage using Supabase.
 import os
 import json
 from typing import Optional, Dict, Any, List
-import requests
+import httpx
 from loguru import logger
 
 class KnowledgeDB:
@@ -44,11 +44,12 @@ class KnowledgeDB:
                 data["embedding"] = embedding
 
             logger.debug(f"Storing knowledge with data: {data}")
-            response = requests.post(
-                f"{self.supabase_url}/rest/v1/knowledge",
-                headers=self.headers,
-                json=data
-            )
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.supabase_url}/rest/v1/knowledge",
+                    headers=self.headers,
+                    json=data,
+                )
 
             if response.status_code != 201:
                 raise Exception(f"Failed to store knowledge: {response.text}")
@@ -102,11 +103,12 @@ class KnowledgeDB:
                 params["and"] = "(" + ",".join(filters) + ")"
 
             # Make the request
-            response = requests.get(
-                f"{self.supabase_url}/rest/v1/knowledge",
-                headers=self.headers,
-                params=params
-            )
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.supabase_url}/rest/v1/knowledge",
+                    headers=self.headers,
+                    params=params,
+                )
 
             if response.status_code != 200:
                 raise Exception(f"Failed to query knowledge: {response.text}")
@@ -126,11 +128,12 @@ class KnowledgeDB:
     async def delete_knowledge(self, knowledge_id: str) -> None:
         """Delete a knowledge item by ID."""
         try:
-            response = requests.delete(
-                f"{self.supabase_url}/rest/v1/knowledge",
-                headers=self.headers,
-                params={"id": f"eq.{knowledge_id}"}
-            )
+            async with httpx.AsyncClient() as client:
+                response = await client.delete(
+                    f"{self.supabase_url}/rest/v1/knowledge",
+                    headers=self.headers,
+                    params={"id": f"eq.{knowledge_id}"},
+                )
 
             if response.status_code != 204:
                 raise Exception(f"Failed to delete knowledge: {response.text}")
@@ -164,12 +167,13 @@ class KnowledgeDB:
             if not data:
                 raise ValueError("No update data provided")
 
-            response = requests.patch(
-                f"{self.supabase_url}/rest/v1/knowledge",
-                headers=self.headers,
-                params={"id": f"eq.{knowledge_id}"},
-                json=data
-            )
+            async with httpx.AsyncClient() as client:
+                response = await client.patch(
+                    f"{self.supabase_url}/rest/v1/knowledge",
+                    headers=self.headers,
+                    params={"id": f"eq.{knowledge_id}"},
+                    json=data,
+                )
 
             if response.status_code != 200:
                 raise Exception(f"Failed to update knowledge: {response.text}")

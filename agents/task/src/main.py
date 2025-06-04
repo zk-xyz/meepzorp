@@ -143,7 +143,7 @@ async def startup_event():
 async def create_task(task: TaskCreate, user_id: str = Query(..., description="ID of the user creating the task")):
     """Create a new task"""
     try:
-        result = db.create_task(task, user_id)
+        result = await db.create_task(task, user_id)
         return Task(**result)
     except Exception as e:
         logger.error(f"Error creating task: {str(e)}")
@@ -153,7 +153,7 @@ async def create_task(task: TaskCreate, user_id: str = Query(..., description="I
 async def get_task(task_id: UUID):
     """Get a task by ID"""
     try:
-        task = db.get_task(task_id)
+        task = await db.get_task(task_id)
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         return Task(**task)
@@ -169,7 +169,7 @@ async def update_task(
 ):
     """Update an existing task"""
     try:
-        result = db.update_task(task_id, task_update, user_id)
+        result = await db.update_task(task_id, task_update, user_id)
         return Task(**result)
     except Exception as e:
         logger.error(f"Error updating task: {str(e)}")
@@ -179,7 +179,7 @@ async def update_task(
 async def delete_task(task_id: UUID):
     """Delete a task"""
     try:
-        db.delete_task(task_id)
+        await db.delete_task(task_id)
         return {"message": "Task deleted successfully"}
     except Exception as e:
         logger.error(f"Error deleting task: {str(e)}")
@@ -198,7 +198,7 @@ async def list_tasks(
 ):
     """List tasks with optional filters"""
     try:
-        tasks = db.list_tasks(
+        tasks = await db.list_tasks(
             user_id=user_id,
             project_id=project_id,
             status=status,

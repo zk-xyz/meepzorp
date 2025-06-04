@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from uuid import UUID
 
-import requests
+import httpx
 from src.models.task import Task, TaskCreate, TaskUpdate, TaskStatus, TaskPriority
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class TaskDB:
             "Content-Type": "application/json"
         }
     
-    def create_task(self, task: TaskCreate, user_id: str) -> Task:
+    async def create_task(self, task: TaskCreate, user_id: str) -> Task:
         """Create a new task in the database"""
         try:
             data = {
@@ -40,12 +40,13 @@ class TaskDB:
                 "updated_by": user_id
             }
             
-            response = requests.post(
-                f"{self.supabase_url}/rest/v1/tasks",
-                headers=self.headers,
-                json=data
-            )
-            response.raise_for_status()
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.supabase_url}/rest/v1/tasks",
+                    headers=self.headers,
+                    json=data,
+                )
+                response.raise_for_status()
             
             task_data = response.json()
             return Task(**task_data)
@@ -54,14 +55,15 @@ class TaskDB:
             logger.error(f"Error creating task: {str(e)}")
             raise
     
-    def get_task(self, task_id: UUID) -> Optional[Task]:
+    async def get_task(self, task_id: UUID) -> Optional[Task]:
         """Retrieve a task by ID"""
         try:
-            response = requests.get(
-                f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
-                headers=self.headers
-            )
-            response.raise_for_status()
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
+                    headers=self.headers,
+                )
+                response.raise_for_status()
             
             tasks = response.json()
             if not tasks:
@@ -73,7 +75,7 @@ class TaskDB:
             logger.error(f"Error retrieving task {task_id}: {str(e)}")
             raise
     
-    def update_task(self, task_id: UUID, task: TaskUpdate, user_id: str) -> Optional[Task]:
+    async def update_task(self, task_id: UUID, task: TaskUpdate, user_id: str) -> Optional[Task]:
         """Update an existing task.
 
         Args:
@@ -94,14 +96,15 @@ class TaskDB:
                 if "due_date" in update_data and update_data["due_date"]:
                     update_data["due_date"] = update_data["due_date"].isoformat()
                 
-                response = requests.patch(
-                    f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
-                    headers=self.headers,
-                    json=update_data
-                )
-                response.raise_for_status()
-                
-                return self.get_task(task_id)
+                async with httpx.AsyncClient() as client:
+                    response = await client.patch(
+                        f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
+                        headers=self.headers,
+                        json=update_data,
+                    )
+                    response.raise_for_status()
+
+                return await self.get_task(task_id)
             
             return None
             
@@ -109,22 +112,23 @@ class TaskDB:
             logger.error(f"Error updating task {task_id}: {str(e)}")
             raise
     
-    def delete_task(self, task_id: UUID) -> bool:
+    async def delete_task(self, task_id: UUID) -> bool:
         """Delete a task by ID"""
         try:
-            response = requests.delete(
-                f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
-                headers=self.headers
-            )
-            response.raise_for_status()
-            
+            async with httpx.AsyncClient() as client:
+                response = await client.delete(
+                    f"{self.supabase_url}/rest/v1/tasks?id=eq.{task_id}",
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+
             return response.status_code == 204
             
         except Exception as e:
             logger.error(f"Error deleting task {task_id}: {str(e)}")
             raise
     
-    def list_tasks(
+    async def list_tasks(
         self,
         user_id: Optional[str] = None,
         status: Optional[TaskStatus] = None,
@@ -160,11 +164,12 @@ class TaskDB:
             if query_params:
                 url += "?" + "&".join(query_params)
             
-            response = requests.get(url, headers=self.headers)
-            response.raise_for_status()
-            
-            tasks = response.json()
-            return [Task(**task) for task in tasks]
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=self.headers)
+                response.raise_for_status()
+
+                tasks = response.json()
+                return [Task(**task) for task in tasks]
             
         except Exception as e:
             logger.error(f"Error listing tasks: {str(e)}")

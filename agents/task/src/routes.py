@@ -20,7 +20,7 @@ async def create_task(
     current_user: str = Depends(get_current_user)
 ):
     """Create a new task"""
-    return db.create_task(task, current_user)
+    return await db.create_task(task, current_user)
 
 @router.get("/{task_id}", response_model=Task)
 async def get_task(
@@ -28,7 +28,7 @@ async def get_task(
     db: TaskDB = Depends(get_db)
 ):
     """Get a task by ID"""
-    task = db.get_task(task_id)
+    task = await db.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
@@ -41,7 +41,7 @@ async def update_task(
     current_user: str = Depends(get_current_user)
 ):
     """Update a task"""
-    updated_task = db.update_task(task_id, task, current_user)
+    updated_task = await db.update_task(task_id, task, current_user)
     if not updated_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return updated_task
@@ -52,7 +52,7 @@ async def delete_task(
     db: TaskDB = Depends(get_db)
 ):
     """Delete a task"""
-    if not db.delete_task(task_id):
+    if not await db.delete_task(task_id):
         raise HTTPException(status_code=404, detail="Task not found")
 
 @router.get("/", response_model=List[Task])
@@ -68,7 +68,7 @@ async def list_tasks(
     db: TaskDB = Depends(get_db)
 ):
     """List tasks with optional filters"""
-    return db.list_tasks(
+    return await db.list_tasks(
         user_id=user_id,
         status=status,
         priority=priority,
@@ -77,4 +77,4 @@ async def list_tasks(
         tags=tags,
         limit=limit,
         offset=offset
-    ) 
+    )
