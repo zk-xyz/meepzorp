@@ -13,6 +13,7 @@ from langchain.vectorstores import SupabaseVectorStore
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from agents.common.baml_prompts import SUMMARY_PROMPT
+from agents.common.registration import register_agent
 from supabase import create_client, Client
 import tempfile
 import uuid
@@ -62,14 +63,35 @@ def create_app():
 
     # === Agent Registration ===
     @app.on_event("startup")
-    async def register_agent():
-        supabase.table("agent_registry").upsert({
-            "name": AGENT_NAME,
-            "version": AGENT_VERSION,
-            "capabilities": AGENT_CAPABILITIES,
-            "status": "active",
-            "endpoint": f"http://{AGENT_NAME}:8000"
-        }).execute()
+    async def startup_register():
+        capabilities = [
+            {
+                "name": "process_document",
+                "description": "Process an uploaded document and store its contents",
+                "parameters": {"file": "binary", "context": "object"},
+            },
+            {
+                "name": "summarize_document",
+                "description": "Summarize a document based on stored chunks",
+                "parameters": {"document_id": "string", "query": "string"},
+            },
+            {
+                "name": "retrieve_content",
+                "description": "Retrieve relevant document chunks",
+                "parameters": {"query": "string", "document_id": "string", "limit": "integer"},
+            },
+        ]
+
+        try:
+            await register_agent(
+                name="Document Processor Agent",
+                description="Processes documents and provides semantic search",
+                capabilities=capabilities,
+                metadata={"version": AGENT_VERSION},
+            )
+        except Exception as e:
+            # Log failure but allow startup to continue
+            print(f"Failed to register agent: {e}")
 
     # === Document Processing Endpoints ===
     @app.post("/process")
