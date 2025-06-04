@@ -12,7 +12,7 @@ class AgentRegistryTool:
     """Tool for registering agents in the system."""
     
     def __init__(self, base_url: str | None = None) -> None:
-        self.base_url = base_url or os.getenv("REGISTRY_URL", "http://localhost:8000")
+        self.base_url = base_url or os.getenv("ORCHESTRATION_URL", "http://localhost:9810")
 
     async def execute(self, agent_info: Dict[str, Any]) -> Dict[str, Any]:
         """Register an agent."""
@@ -26,7 +26,7 @@ class AgentDiscoveryTool:
     """Tool for discovering agents based on capabilities."""
     
     def __init__(self, base_url: str | None = None) -> None:
-        self.base_url = base_url or os.getenv("REGISTRY_URL", "http://localhost:8000")
+        self.base_url = base_url or os.getenv("ORCHESTRATION_URL", "http://localhost:9810")
 
     async def execute(self, query: Dict[str, Any]) -> Dict[str, Any]:
         """Discover agents based on capabilities."""

@@ -5,9 +5,10 @@ Handles agent registration and tool routing.
 
 import os
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
+from typing import Dict, Any, List
+import uuid
 
 from .registry import AgentRegistryTool, AgentDiscoveryTool
 from .router import RouteRequestTool
@@ -39,10 +40,37 @@ discovery_tool = AgentDiscoveryTool()
 router_tool = RouteRequestTool()
 workflow_tool = ExecuteWorkflowTool()
 
+# In-memory store for registered agents. In a production deployment this would
+# be backed by a persistent database such as Supabase.
+agents_store: Dict[str, Dict[str, Any]] = {}
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
+@app.post("/agents")
+async def register_agent(agent: Dict[str, Any]):
+    """Register a new agent."""
+    agent_id = str(uuid.uuid4())
+    agents_store[agent_id] = agent
+    return {"status": "success", "agent_id": agent_id}
+
+
+@app.get("/agents")
+async def discover_agents(capabilities: List[str] | None = Query(None)):
+    """Retrieve registered agents, optionally filtered by capability names."""
+    results = []
+    for aid, info in agents_store.items():
+        if capabilities:
+            names = [c.get("name") for c in info.get("capabilities", [])]
+            if not any(name in capabilities for name in names):
+                continue
+        agent_data = dict(info)
+        agent_data["id"] = aid
+        results.append(agent_data)
+    return {"status": "success", "agents": results}
 
 @app.post("/mcp/tools")
 async def handle_tool_request(request: Dict[str, Any]):

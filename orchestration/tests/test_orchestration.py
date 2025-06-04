@@ -7,6 +7,8 @@ import pytest
 import pytest_asyncio
 import asyncio
 from typing import Dict, Any
+from fastapi.testclient import TestClient
+from meepzorp.orchestration.main import app, agents_store
 import uuid
 import json
 from datetime import datetime
@@ -266,4 +268,28 @@ async def test_workflow_error_handling(mock_workflow):
         "input_variables": {}
     })
     assert execute_result["status"] == "error"
-    assert "message" in execute_result 
+    assert "message" in execute_result
+
+
+@pytest.mark.asyncio
+async def test_agents_endpoints():
+    """Test the /agents API endpoints."""
+    client = TestClient(app)
+    agents_store.clear()
+    agent = {
+        "name": "ephemeral",
+        "description": "temp agent",
+        "endpoint": "http://localhost:1234",
+        "capabilities": [{"name": "temp", "description": "t"}],
+        "metadata": {},
+    }
+    resp = client.post("/agents", json=agent)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    aid = data["agent_id"]
+
+    resp = client.get("/agents", params={"capabilities": ["temp"]})
+    assert resp.status_code == 200
+    agents = resp.json()["agents"]
+    assert any(a["id"] == aid for a in agents)
