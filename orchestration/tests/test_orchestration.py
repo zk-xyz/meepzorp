@@ -146,6 +146,21 @@ async def test_workflow_creation_and_execution(mock_workflow):
     assert execute_result["status"] == "success", f"Workflow execution failed: {execute_result.get('message', 'No error message')}"
     assert "results" in execute_result
 
+
+@pytest.mark.asyncio
+async def test_execute_workflow_invalid_id(mock_workflow):
+    """Ensure executing a non-existent workflow returns an error."""
+    creator = CreateWorkflowTool()
+    create_result = await creator.execute(mock_workflow)
+    assert create_result["status"] == "success"
+
+    executor = ExecuteWorkflowTool()
+    execute_result = await executor.execute({
+        "workflow_id": "bogus_id",
+        "input_variables": {}
+    })
+    assert execute_result["status"] == "error"
+
 @pytest.mark.asyncio
 async def test_error_handling():
     """Test error handling in orchestration components."""
