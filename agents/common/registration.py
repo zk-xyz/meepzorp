@@ -3,7 +3,6 @@ Agent registration module for MCP agents.
 """
 import os
 import httpx
-import asyncio
 from typing import List, Dict, Any
 from loguru import logger
 
@@ -45,10 +44,7 @@ async def register_agent(name: str, description: str, capabilities: List[Dict[st
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{orchestration_url}/mcp/tools",
-                json={
-                    "name": "register_agent",
-                    "parameters": registration_data
-                }
+                json=registration_data,
             )
             response.raise_for_status()
             result = response.json()
