@@ -190,7 +190,7 @@ class SuggestConnectionsCapability:
             # Build query parameters
             params = {
                 "limit": str(limit),
-                "order": "embedding <-> '{source_entity['embedding']}'::vector"
+                "order": f"embedding <-> '{source_entity['embedding']}'::vector"
             }
             
             # Add relationship type filter if specified
