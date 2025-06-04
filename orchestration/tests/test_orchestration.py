@@ -10,10 +10,66 @@ from typing import Dict, Any
 import uuid
 import json
 from datetime import datetime
+import httpx
 
 from meepzorp.orchestration.registry import AgentRegistryTool, AgentDiscoveryTool
 from meepzorp.orchestration.router import RouteRequestTool
 from meepzorp.orchestration.workflows import ExecuteWorkflowTool, CreateWorkflowTool, ListWorkflowsTool
+
+
+class MockResponse:
+    def __init__(self, data):
+        self._data = data
+
+    def json(self):
+        return self._data
+
+    def raise_for_status(self):
+        pass
+
+
+class MockAsyncClient:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    async def post(self, url, json=None):
+        if url.endswith("/agents"):
+            return MockResponse({"status": "success", "agent_id": "test_agent_id"})
+        if url.endswith("/workflows/execute"):
+            return MockResponse({"status": "success", "results": {"step1": {"status": "success", "output": "Test output"}}})
+        if url.endswith("/workflows"):
+            return MockResponse({"status": "success", "workflow_id": str(uuid.uuid4())})
+        return MockResponse({})
+
+    async def get(self, url, params=None):
+        if url.endswith("/agents"):
+            return MockResponse({
+                "status": "success",
+                "agents": [
+                    {
+                        "name": "test_agent",
+                        "capabilities": [{"name": "test_capability", "description": "Test capability"}],
+                        "endpoint": "http://localhost:8811",
+                    }
+                ],
+            })
+        if url.endswith("/workflows"):
+            return MockResponse({
+                "status": "success",
+                "workflows": [
+                    {"id": "test_workflow_id", "name": "Test Workflow", "description": "A test workflow"}
+                ],
+            })
+        return MockResponse({})
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def patch_httpx(monkeypatch):
+    monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
+    yield
 
 @pytest_asyncio.fixture
 async def mock_agent_info():
