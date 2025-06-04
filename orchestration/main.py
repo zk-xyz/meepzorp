@@ -9,9 +9,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 
-from registry import AgentRegistryTool, AgentDiscoveryTool
-from router import RouteRequestTool
-from workflows import ExecuteWorkflowTool
+from .registry import AgentRegistryTool, AgentDiscoveryTool
+from .router import RouteRequestTool
+from .workflows import ExecuteWorkflowTool
 
 # Configure logging
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
