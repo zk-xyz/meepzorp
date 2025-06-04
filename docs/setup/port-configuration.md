@@ -12,7 +12,6 @@ The following ports are used by various services in the system:
 | Base Agent | 8001 | Template for new agent development |
 | Personal Agent | 8002 | Personal knowledge agent |
 | Task Agent | 8003 | Task management agent |
-| Test Agent | 9811 | Testing and development agent |
 | UI | 3000 | Management dashboard |
 | Redis | 6379 | Cache and pub/sub messaging |
 
@@ -24,14 +23,13 @@ When setting up a new project or agent, follow these steps to ensure correct por
    - Copy `.env.example` to `.env`
    - Set the following port variables:
      ```
-     ORCHESTRATION_PORT=9810
-     BASE_AGENT_PORT=8001
-     PERSONAL_AGENT_PORT=8002
-     TASK_AGENT_PORT=8003
-     TEST_AGENT_PORT=9811
-     REDIS_PORT=6379
-     UI_PORT=3000
-     ```
+    ORCHESTRATION_PORT=9810
+    BASE_AGENT_PORT=8001
+    PERSONAL_AGENT_PORT=8002
+    TASK_AGENT_PORT=8003
+    REDIS_PORT=6379
+    UI_PORT=3000
+    ```
 
 2. **Docker Compose Configuration**
    - Ensure port mappings in `docker-compose.yml` match the environment variables
