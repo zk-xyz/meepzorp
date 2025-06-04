@@ -135,26 +135,6 @@ services:
       - orchestration
     command: sh -c "npm run build && npm start"
 
-  # Test agent - For testing and development
-  test-agent:
-    build:
-      context: ./agent
-      dockerfile: Dockerfile
-    container_name: meepzorp-test-agent
-    # Test agent port - used for development and testing
-    ports:
-      - "${TEST_AGENT_PORT:-9811}:${TEST_AGENT_PORT:-9811}"
-    environment:
-      - AGENT_PORT=${TEST_AGENT_PORT:-9811}
-      - AGENT_HOST=0.0.0.0
-      - AGENT_EXTERNAL_HOST=test-agent
-      - ORCHESTRATION_URL=http://orchestration:${ORCHESTRATION_PORT:-9810}
-      - LOG_LEVEL=INFO
-    depends_on:
-      orchestration:
-        condition: service_healthy
-    networks:
-      - mcp-net
 
   # Task management agent - Manages tasks and project management
   task-agent:
