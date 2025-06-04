@@ -192,4 +192,5 @@ This implementation provides a foundation for a multi-agent system but has some 
 - [Supabase](https://supabase.io)
 - [pgvector](https://github.com/pgvector/pgvector)
 - [FastAPI](https://fastapi.tiangolo.com/)
+- [BAML](https://github.com/BetterData/baml)
 - [Docker](https://www.docker.com/)

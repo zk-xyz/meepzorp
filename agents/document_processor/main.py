@@ -12,7 +12,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import SupabaseVectorStore
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
+from agents.common.baml_prompts import SUMMARY_PROMPT
 from supabase import create_client, Client
 import tempfile
 import uuid
@@ -158,24 +158,9 @@ def create_app():
             ])
 
             # Generate summary
-            prompt = PromptTemplate(
-                input_variables=["context", "query"],
-                template="""
-You are a strategic research analyst. Based on the following content (with citations), provide a comprehensive summary.
-Include citations [chunk:X, page:Y] when referencing specific information.
-
-Content:
-{context}
-
-Query:
-{query}
-
-Provide a structured summary with citations:"""
-            )
-
             summary_chain = LLMChain(
                 llm=ChatOpenAI(model_name="gpt-4-turbo", temperature=0.3),
-                prompt=prompt
+                prompt=SUMMARY_PROMPT.to_langchain()
             )
 
             summary = summary_chain.run({

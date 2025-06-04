@@ -82,7 +82,8 @@ class LLMService:
         self,
         prompt_template: str,
         input_variables: List[str],
-        memory: bool = False
+        memory: bool = False,
+        baml_prompt: Optional[Any] = None
     ) -> LLMChain:
         """
         Create a chain with the given prompt template.
@@ -95,21 +96,25 @@ class LLMService:
         Returns:
             An LLM chain
         """
+        if baml_prompt is not None:
+            prompt = baml_prompt.to_langchain()
+        else:
+            prompt = PromptTemplate(
+                template=prompt_template,
+                input_variables=input_variables
+            )
+
         if memory:
             memory = ConversationBufferMemory()
             return ConversationChain(
                 llm=self.llm,
                 memory=memory,
-                prompt=ChatPromptTemplate.from_template(prompt_template)
+                prompt=prompt if baml_prompt else ChatPromptTemplate.from_template(prompt_template)
             )
-        else:
-            return LLMChain(
-                llm=self.llm,
-                prompt=PromptTemplate(
-                    template=prompt_template,
-                    input_variables=input_variables
-                )
-            )
+        return LLMChain(
+            llm=self.llm,
+            prompt=prompt
+        )
     
     async def generate(
         self,

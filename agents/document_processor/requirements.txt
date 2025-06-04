@@ -7,4 +7,5 @@ supabase==2.0.3
 pypdf==3.17.1
 python-magic==0.4.27
 tiktoken==0.5.1
-pydantic==2.5.2 
+pydantic==2.5.2
+baml>=0.1.0
