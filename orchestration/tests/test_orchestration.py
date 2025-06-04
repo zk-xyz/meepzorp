@@ -10,6 +10,8 @@ from typing import Dict, Any
 import uuid
 import json
 from datetime import datetime
+from fastapi.testclient import TestClient
+from meepzorp.orchestration.main import app
 
 from meepzorp.orchestration.registry import AgentRegistryTool, AgentDiscoveryTool
 from meepzorp.orchestration.router import RouteRequestTool
@@ -195,4 +197,16 @@ async def test_workflow_error_handling(mock_workflow):
         "input_variables": {}
     })
     assert execute_result["status"] == "error"
-    assert "message" in execute_result 
+    assert "message" in execute_result
+
+
+def test_agent_registration_endpoint(mock_agent_info):
+    """Ensure agents can register via the /mcp/tools endpoint."""
+    client = TestClient(app)
+    payload = {"tool": "register_agent", **mock_agent_info}
+    response = client.post("/mcp/tools", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["data"]["status"] == "success"
+    assert "agent_id" in data["data"]

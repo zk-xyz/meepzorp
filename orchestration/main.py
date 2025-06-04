@@ -49,12 +49,12 @@ async def handle_tool_request(request: Dict[str, Any]):
     """
     Handle tool requests from agents.
     This endpoint either:
-    1. Registers new agent capabilities if the request contains registration data
-    2. Routes tool requests to the appropriate agent
+    1. Registers new agent capabilities when ``request.get("tool") == "register_agent"``
+    2. Routes tool requests to the appropriate agent for any other tool name
     """
     try:
         # Check if this is a registration request
-        if "name" in request and "capabilities" in request:
+        if request.get("tool") == "register_agent":
             result = await registry_tool.execute(request)
             return {"status": "success", "message": "Agent registered successfully", "data": result}
         
