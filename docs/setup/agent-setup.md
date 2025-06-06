@@ -43,8 +43,20 @@ Agents must register with the orchestration service to participate in the system
                description="What your agent does",
                capabilities=capabilities
            )
-       except Exception as e:
-           logger.error(f"Failed to register agent: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to register agent: {str(e)}")
+   ```
+
+   The registration request sent to the orchestration service looks like:
+
+   ```json
+   {
+       "tool": "register_agent",
+       "name": "Your Agent Name",
+       "description": "What your agent does",
+       "endpoint": "http://your-agent:8000",
+       "capabilities": [...]
+   }
    ```
 
 3. **Docker Configuration**

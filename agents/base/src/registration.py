@@ -47,8 +47,8 @@ async def register_agent(name: str, description: str, capabilities: List[Dict[st
                 f"{orchestration_url}/mcp/tools",
                 json={
                     "tool": "register_agent",
-                    "parameters": registration_data
-                }
+                    **registration_data,
+                },
             )
             response.raise_for_status()
             result = response.json()
