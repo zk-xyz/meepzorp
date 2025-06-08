@@ -71,8 +71,8 @@ async def patch_httpx(monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
     yield
 
-@pytest_asyncio.fixture
-async def mock_agent_info():
+@pytest.fixture
+def mock_agent_info():
     """Fixture providing mock agent information."""
     return {
         "name": "test_agent",
