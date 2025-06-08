@@ -5,12 +5,24 @@ This module provides integration tests for the registry, router, and workflow co
 """
 
 import asyncio
-import json
 import uuid
-from datetime import datetime
-from typing import Any, Dict
 
-import httpx
+
+import sys
+import types
+
+try:  # httpx may not be installed in the execution environment
+    import httpx  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - fallback for minimal test env
+    httpx = types.ModuleType("httpx")
+    class _DummyClient:  # minimal stand-in so module import succeeds
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+    httpx.AsyncClient = _DummyClient
+    sys.modules["httpx"] = httpx
+
 import pytest
 import pytest_asyncio
 
@@ -35,6 +47,15 @@ class MockResponse:
 
 
 class MockAsyncClient:
+    """Stateful mock for ``httpx.AsyncClient`` covering registry, router and workflow endpoints."""
+
+    agents: dict[str, dict] = {}
+    workflows: dict[str, dict] = {}
+    sent_requests: list[tuple[str, dict]] = []
+
+    def __init__(self, *args, **kwargs) -> None:  # pragma: no cover - compatibility
+        pass
+
     async def __aenter__(self):
         return self
 
@@ -43,58 +64,57 @@ class MockAsyncClient:
 
     async def post(self, url, json=None):
         if url.endswith("/agents"):
-            return MockResponse({"status": "success", "agent_id": "test_agent_id"})
+            agent_id = str(uuid.uuid4())
+            self.agents[agent_id] = {"id": agent_id, **(json or {})}
+            return MockResponse({"status": "success", "agent_id": agent_id})
+
+        if url.endswith("/workflows") and not url.endswith("/workflows/execute"):
+            workflow_id = str(uuid.uuid4())
+            self.workflows[workflow_id] = {"id": workflow_id, **(json or {})}
+            return MockResponse({"status": "success", "workflow_id": workflow_id})
+
         if url.endswith("/workflows/execute"):
-            return MockResponse(
-                {
-                    "status": "success",
-                    "results": {
-                        "step1": {"status": "success", "output": "Test output"}
-                    },
-                }
-            )
-        if url.endswith("/workflows"):
-            return MockResponse({"status": "success", "workflow_id": str(uuid.uuid4())})
+            workflow_id = (json or {}).get("workflow_id")
+            if workflow_id not in self.workflows:
+                return MockResponse({"status": "error", "message": "Workflow not found"})
+            if "invalid_input" in (json or {}).get("input_variables", {}):
+                return MockResponse({"status": "error", "partial_results": {}})
+            return MockResponse({
+                "status": "success",
+                "results": {"step1": {"status": "success", "output": "Test output"}}
+            })
+
+        if url.endswith("/mcp"):
+            self.sent_requests.append((url, json))
+            return MockResponse({"status": "success", "result": {"ok": True}})
+
         return MockResponse({})
 
     async def get(self, url, params=None):
         if url.endswith("/agents"):
-            return MockResponse(
-                {
-                    "status": "success",
-                    "agents": [
-                        {
-                            "id": "test_agent_id",
-                            "name": "test_agent",
-                            "capabilities": [
-                                {
-                                    "name": "test_capability",
-                                    "description": "Test capability",
-                                }
-                            ],
-                            "endpoint": "http://localhost:8811",
-                        }
-                    ],
-                }
-            )
+            capability = None
+            if params:
+                caps = params.get("capabilities")
+                capability = caps[0] if isinstance(caps, list) and caps else caps
+            agents = list(self.agents.values())
+            if capability:
+                agents = [
+                    a for a in agents
+                    if any(c.get("name") == capability for c in a.get("capabilities", []))
+                ]
+            return MockResponse({"status": "success", "agents": agents})
+
         if url.endswith("/workflows"):
-            return MockResponse(
-                {
-                    "status": "success",
-                    "workflows": [
-                        {
-                            "id": "test_workflow_id",
-                            "name": "Test Workflow",
-                            "description": "A test workflow",
-                        }
-                    ],
-                }
-            )
+            return MockResponse({"status": "success", "workflows": list(self.workflows.values())})
+
         return MockResponse({})
 
 
 @pytest_asyncio.fixture(autouse=True)
 async def patch_httpx(monkeypatch):
+    MockAsyncClient.agents.clear()
+    MockAsyncClient.workflows.clear()
+    MockAsyncClient.sent_requests.clear()
     monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
     yield
 
@@ -189,19 +209,19 @@ async def test_request_routing(registered_agent):
     await asyncio.sleep(0.1)
 
     # Route a test request
-    result = await router.execute(
-        {
-            "capability": "test_capability",
-            "parameters": {"test_param": "test_value"},
-            "preferred_agent_id": str(registered_agent),  # Ensure it's a string
-            "timeout": 5.0,
-        }
-    )
+    payload = {
+        "capability": "test_capability",
+        "parameters": {"test_param": "test_value"},
+        "preferred_agent_id": str(registered_agent),
+        "timeout": 5.0,
+    }
+    result = await router.execute(payload)
 
-    assert (
-        result["status"] == "success"
-    ), f"Request routing failed: {result.get('message', 'No error message')}"
-    assert "result" in result, "Response missing result field"
+    assert result["status"] == "success"
+    assert MockAsyncClient.sent_requests
+    url, body = MockAsyncClient.sent_requests[0]
+    assert url == "http://localhost:8811/mcp"
+    assert body["capability"] == payload["capability"]
 
 
 @pytest.mark.asyncio
