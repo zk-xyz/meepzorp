@@ -35,6 +35,10 @@ class MockResponse:
 
 
 class MockAsyncClient:
+    """Async client mock that records all requests."""
+
+    sent_requests: list[tuple[str, str, Any]] = []
+
     async def __aenter__(self):
         return self
 
@@ -42,6 +46,7 @@ class MockAsyncClient:
         pass
 
     async def post(self, url, json=None):
+        self.sent_requests.append(("POST", url, json))
         if url.endswith("/agents"):
             return MockResponse({"status": "success", "agent_id": "test_agent_id"})
         if url.endswith("/workflows/execute"):
@@ -55,9 +60,12 @@ class MockAsyncClient:
             )
         if url.endswith("/workflows"):
             return MockResponse({"status": "success", "workflow_id": str(uuid.uuid4())})
+        if url.endswith("/mcp"):
+            return MockResponse({"status": "success", "result": {"ok": True}})
         return MockResponse({})
 
     async def get(self, url, params=None):
+        self.sent_requests.append(("GET", url, params))
         if url.endswith("/agents"):
             return MockResponse(
                 {
@@ -95,6 +103,7 @@ class MockAsyncClient:
 
 @pytest_asyncio.fixture(autouse=True)
 async def patch_httpx(monkeypatch):
+    MockAsyncClient.sent_requests = []
     monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
     yield
 
@@ -202,6 +211,21 @@ async def test_request_routing(registered_agent):
         result["status"] == "success"
     ), f"Request routing failed: {result.get('message', 'No error message')}"
     assert "result" in result, "Response missing result field"
+
+
+@pytest.mark.asyncio
+async def test_router_forwards_request():
+    """Ensure the router sends the request to the agent MCP endpoint."""
+    router = RouteRequestTool()
+
+    result = await router.execute({"capability": "test_capability", "parameters": {"x": 1}})
+    assert result["status"] == "success"
+
+    assert any(
+        method == "POST" and url == "http://localhost:8811/mcp"
+        and payload.get("capability") == "test_capability"
+        for method, url, payload in MockAsyncClient.sent_requests
+    )
 
 
 @pytest.mark.asyncio
