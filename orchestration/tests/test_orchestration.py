@@ -5,11 +5,9 @@ This module provides integration tests for the registry, router, and workflow co
 """
 
 import asyncio
-import uuid
-
-
 import sys
 import types
+import uuid
 
 try:  # httpx may not be installed in the execution environment
     import httpx  # type: ignore
