@@ -12,6 +12,8 @@ The following ports are used by various services in the system:
 | Base Agent | 8001 | Template for new agent development |
 | Personal Agent | 8002 | Personal knowledge agent |
 | Task Agent | 8003 | Task management agent |
+| Document Processor | 8004 | Document analysis service |
+| Registry Service | 8005 | Stores agent metadata |
 | UI | 3000 | Management dashboard |
 | Redis | 6379 | Cache and pub/sub messaging |
 
@@ -27,6 +29,8 @@ When setting up a new project or agent, follow these steps to ensure correct por
     BASE_AGENT_PORT=8001
     PERSONAL_AGENT_PORT=8002
     TASK_AGENT_PORT=8003
+    DOCUMENT_PROCESSOR_PORT=8004
+    REGISTRY_PORT=8005
     REDIS_PORT=6379
     UI_PORT=3000
     ```

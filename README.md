@@ -89,6 +89,7 @@ docker compose up -d
 | Personal Agent    | http://localhost:8002 |
 | Task Agent        | http://localhost:8003 |
 | Document Processor| http://localhost:8004 |
+| Registry Service  | http://localhost:8005 |
 | UI Dashboard      | http://localhost:3000 |
 
 Port mapping details live in [`docs/setup/port-configuration.md`](docs/setup/port-configuration.md).
