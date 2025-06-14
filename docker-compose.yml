@@ -204,6 +204,30 @@ services:
       retries: 3
       start_period: 5s
 
+  registry-service:
+    build:
+      context: ./registry_service
+      dockerfile: Dockerfile
+    container_name: meepzorp-registry-service
+    restart: unless-stopped
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - REGISTRY_PORT=${REGISTRY_PORT:-8005}
+    ports:
+      - "${REGISTRY_PORT:-8005}:${REGISTRY_PORT:-8005}"
+    networks:
+      - mcp-net
+    depends_on:
+      orchestration:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${REGISTRY_PORT:-8005}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
 networks:
   mcp-net:
     driver: bridge
