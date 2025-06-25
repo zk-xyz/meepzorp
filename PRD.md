@@ -269,3 +269,25 @@ Meepzorp is a sophisticated multi-agent system that enables multiple specialized
 This enhancement plan aims to elevate the platform to production-grade status while maintaining its modular and extensible nature. Implementation will be phased based on the priority matrix, with immediate focus on high-impact, lower-complexity items.
 
 This PRD reflects the current state of the Meepzorp system based on the implemented components and identified limitations. It serves as a foundation for future development and enhancement of the multi-agent collaboration platform. 
+## 11. Knowledge Base and Orchestration Strategy
+
+### 11.1 Knowledge Base Build
+- Use Supabase with **pgvector** to store documents, chunks and embeddings.
+- The Document Processor ingests PDFs and other formats, producing chunked text and vector embeddings.
+- Entities and relationships are stored using a lightweight graph model. Neo4j or a similar graph store can be added later for complex querying.
+- Provide REST endpoints for creating, querying, updating and deleting knowledge items.
+- Combine vector search with graph relations (GraphRAG style) to enable semantic and relational reasoning.
+
+### 11.2 Orchestration & Workflow
+- The FastAPI orchestration service remains the central coordinator.
+- Agents register their capabilities with the registry on startup.
+- The router matches requested capabilities to registered agents and forwards requests with retries.
+- The workflow engine executes multi-step workflows, mapping variables between steps and persisting results.
+- Workflow definitions and execution state are stored in Supabase for auditing and re-use.
+
+### 11.3 Multi-Agent Workflow Example
+1. A document is uploaded through the Document Processor.
+2. The Personal Knowledge Agent indexes the content and extracts entities.
+3. The Task Agent composes a workflow referencing available capabilities.
+4. Specialized agents execute workflow steps in sequence via the orchestration API.
+5. Results are stored and can be queried or visualized in the management UI.
