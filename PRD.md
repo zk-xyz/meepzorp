@@ -44,7 +44,7 @@ Meepzorp is a sophisticated multi-agent system that enables multiple specialized
 
 #### 2.2.2 API Services
 - **Endpoints**:
-  - Orchestration API (Port 8000)
+  - Orchestration API (Port 9810)
   - Base Agent (Port 8001)
   - Personal Agent (Port 8002)
 
