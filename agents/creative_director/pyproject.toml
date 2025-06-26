@@ -15,8 +15,11 @@ dependencies = [
     "python-dateutil>=2.8.2"
 ]
 
-[tool.setuptools]
-packages = ["creative_director", "creative_director.capabilities", "creative_director.tests"]
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
