@@ -69,6 +69,9 @@ cp .env.example .env
 # ‼️  Edit .env and fill in:
 #     SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY  (and any optional overrides)
 # Install Python dependencies (required for running tests)
+# `requirements.txt` includes development packages such as
+# `pytest-asyncio`, `httpx`, and `python-dotenv` which are needed when
+# running the test suite.
 pip install -r requirements.txt
 pip install -r orchestration/requirements.txt
 ```

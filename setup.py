@@ -13,5 +13,7 @@ setup(
         "fastapi",
         "uvicorn",
         "pydantic",
+        "httpx",
+        "python-dotenv",
     ],
-) 
+)
