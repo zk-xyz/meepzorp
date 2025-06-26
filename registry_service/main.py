@@ -40,10 +40,19 @@ class RegistryDB:
         result = resp.json()[0] if isinstance(resp.json(), list) else resp.json()
         return result
 
-    async def list_agents(self, capability: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def list_agents(self, capabilities: Optional[List[str] | str] = None) -> List[Dict[str, Any]]:
         params = {}
-        if capability:
-            params["capabilities"] = f"cs.[{{\"name\":\"{capability}\"}}]"
+        if capabilities:
+            if isinstance(capabilities, str):
+                capabilities = [capabilities]
+            capabilities = [c for c in capabilities if c]
+            if len(capabilities) == 1:
+                params["capabilities"] = f"cs.[{{\"name\":\"{capabilities[0]}\"}}]"
+            else:
+                or_filters = ",".join(
+                    f"capabilities.cs.[{{\"name\":\"{cap}\"}}]" for cap in capabilities
+                )
+                params["or"] = f"({or_filters})"
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{self.supabase_url}/rest/v1/agents",
@@ -76,7 +85,10 @@ async def register_agent(agent: Dict[str, Any]):
 @app.get("/agents")
 async def get_agents(capabilities: Optional[str] = None):
     try:
-        agents = await db.list_agents(capabilities)
+        cap_list: List[str] | None = None
+        if capabilities:
+            cap_list = [c.strip() for c in capabilities.split(",") if c.strip()]
+        agents = await db.list_agents(cap_list)
         return {"status": "success", "agents": agents}
     except Exception as e:
         logger.error(f"Error retrieving agents: {e}")
