@@ -28,8 +28,20 @@ jobs:
           pip install -r meepzorp/requirements.txt
           pip install pytest pytest-asyncio
 
-      - name: Run tests
-        run: pytest meepzorp/orchestration/tests -q --cov=meepzorp --cov-fail-under=80
+      - name: Run agent tests
+        run: |
+          COVERAGE_FILE=.coverage.agents \
+          pytest meepzorp/agents/*/tests meepzorp/agents/*/*/tests -q --cov=agents
+
+      - name: Run service tests
+        run: |
+          COVERAGE_FILE=.coverage.services \
+          pytest meepzorp/orchestration/tests meepzorp/registry_service/tests -q --cov=orchestration --cov=registry_service
+
+      - name: Combine coverage
+        run: |
+          coverage combine
+          coverage report --fail-under=80
 
       - name: Build Docker images (no push)
         run: |
