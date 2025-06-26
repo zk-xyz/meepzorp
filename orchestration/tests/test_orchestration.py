@@ -5,24 +5,15 @@ This module provides integration tests for the registry, router, and workflow co
 """
 
 import asyncio
-import sys
-import types
 import uuid
-
-try:  # httpx may not be installed in the execution environment
-    import httpx  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - fallback for minimal test env
-    httpx = types.ModuleType("httpx")
-    class _DummyClient:  # minimal stand-in so module import succeeds
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc, tb):
-            pass
-    httpx.AsyncClient = _DummyClient
-    sys.modules["httpx"] = httpx
-
 import pytest
-import pytest_asyncio
+
+httpx = pytest.importorskip(
+    "httpx", reason="httpx is required for orchestration tests"
+)
+pytest_asyncio = pytest.importorskip(
+    "pytest_asyncio", reason="pytest_asyncio is required for orchestration tests"
+)
 
 from meepzorp.orchestration.registry import AgentDiscoveryTool, AgentRegistryTool
 from meepzorp.orchestration.router import RouteRequestTool
