@@ -66,8 +66,11 @@ cd meepzorp
 
 # Create your env file *in the repo root*
 cp .env.example .env
-# ‼️  Edit .env and fill in:
-#     SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY  (and any optional overrides)
+# ‼️  Edit .env and fill in values for:
+#     SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY
+#     REGISTRY_URL, REGISTRY_PORT, ORCHESTRATION_PORT
+#     BASE_AGENT_PORT, PERSONAL_AGENT_PORT, TASK_AGENT_PORT, DOCUMENT_PROCESSOR_PORT
+#     UI_PORT, REDIS_PORT (and any optional overrides)
 # Install Python dependencies (required for running tests)
 pip install -r requirements.txt
 pip install -r orchestration/requirements.txt
