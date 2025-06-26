@@ -68,6 +68,9 @@ cd meepzorp
 cp .env.example .env
 # ‼️  Edit .env and fill in:
 #     SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY  (and any optional overrides)
+# Install Python dependencies (required for running tests)
+pip install -r requirements.txt
+pip install -r orchestration/requirements.txt
 ```
 
 Full list of required/optional variables is documented in
@@ -98,6 +101,8 @@ Port mapping details live in [`docs/setup/port-configuration.md`](docs/setup/por
 
 ```bash
 # inside the container network
+pip install -r requirements.txt
+pip install -r orchestration/requirements.txt
 docker compose exec task-agent pytest
 ```
 
