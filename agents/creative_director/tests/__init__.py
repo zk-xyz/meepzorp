@@ -1,3 +1,1 @@
-"""
-Test package for Creative Director agent.
-""" 
+"""Test package for the Creative Director agent.""" 
