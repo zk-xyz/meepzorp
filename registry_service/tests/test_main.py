@@ -1,7 +1,7 @@
+import importlib
 import pytest
 from fastapi.testclient import TestClient
 
-from registry_service.main import app, RegistryDB
 
 class MockResponse:
     def __init__(self, status_code: int, json_data=None, text=""):
@@ -12,16 +12,18 @@ class MockResponse:
     def json(self):
         return self._json
 
-@pytest.fixture(autouse=True)
-def set_env(monkeypatch):
+def load_main(monkeypatch):
+    """Set required environment variables and import the app module."""
     monkeypatch.setenv("SUPABASE_URL", "http://localhost")
     monkeypatch.setenv("SUPABASE_KEY", "key")
+    module = importlib.import_module("registry_service.main")
+    importlib.reload(module)
+    return module
 
 @pytest.fixture
-def client(mocker):
-    mock_db = RegistryDB()
-    mock_client = TestClient(app)
-    return mock_client
+def client(monkeypatch):
+    main = load_main(monkeypatch)
+    return TestClient(main.app)
 
 def test_register_agent(mocker, client):
     async_mock = mocker.AsyncMock()
